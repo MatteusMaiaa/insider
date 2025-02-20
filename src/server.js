@@ -1,5 +1,46 @@
 import http from 'node:http'
-import { stringify } from 'node:querystring'
+import { json } from '../streams/json.js'
+import { Database } from './database.js'
+
+
+const database = new Database()
+
+const server = http.createServer(async (req, res ) => {
+    const { method, url } = req 
+
+  await json(req, res)
+    
+    if (method === 'GET' && url === '/users') {
+       const users = database.select('users')
+       
+        return res.end(JSON.stringify(users))
+    }
+
+    if (method === 'POST' && url === '/users') {
+        const { name, email } = req.body;
+    
+        const user = { 
+            id: 1,
+            name: name,  // Usando os dados passados no corpo da requisição
+            email: email,
+        };
+        
+        database.insert('users', user); // Inserindo o usuário na base de dados
+    
+        return res.writeHead(201).end(); // Retornando sucesso
+    }
+    
+
+    return res.writeHead(404).end('NOT FOUND')
+})
+
+server.listen(3333)
+
+
+
+
+
+
 
 // - HTTP
 //  - metodo HTTP
@@ -21,30 +62,3 @@ import { stringify } from 'node:querystring'
 //JSON - javascript Object notation
 
 //Cabecalhos (requisicao/resposta) => Metadados
-
-const users = []
-
-const server = http.createServer((req, res ) => {
-    const { method, url } = req 
-
-    if (method === 'GET' && url === '/users') {
-        return res
-        .setHeader('Content-type', 'application/json')
-        .end(JSON.stringify(users))
-    }
-
-    if(method === 'POST' && url === '/users') {
-        users.push({
-            id: 1,
-            name: 'Jhon doe',
-            email: 'jhondoe@gmail.com',
-        })
-        
-            return res.writeHead(201).end() 
-        }
-    
-
-    return res.writeHead(404).end('NOT FOUND')
-})
-
-server.listen(3333)
